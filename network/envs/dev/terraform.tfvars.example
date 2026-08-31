@@ -1,0 +1,17 @@
+region         = "ap-northeast-2"
+aws_profile    = "tf-user"
+aws_account_id = "123456789012"
+project        = "last-lab"
+env            = "dev"
+
+vpc_cidr = "10.0.0.0/16"
+
+public_subnets = {
+  a = "10.0.0.0/20"
+  c = "10.0.16.0/20"
+}
+
+private_subnets = {
+  a = "10.0.32.0/20"
+  c = "10.0.48.0/20"
+}
