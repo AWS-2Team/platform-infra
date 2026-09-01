@@ -1,4 +1,4 @@
-bucket       = "last-lab-prod-tf-state"
+bucket       = "Your-state-bucket-name"
 key          = "last-lab/dev/ecr/terraform.tfstate"
 region       = "ap-northeast-2"
 profile      = "tf-user"
