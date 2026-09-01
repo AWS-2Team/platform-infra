@@ -1,0 +1,13 @@
+resource "aws_ecr_repository" "main" {
+  name                 = var.name
+  image_tag_mutability = var.image_tag_mutability
+  force_delete         = var.force_delete
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  tags = {
+    Name = var.name
+  }
+}

@@ -1,0 +1,6 @@
+bucket       = "your-tfstate-bucket-name"
+key          = "last-lab/dev/eks/terraform.tfstate"
+region       = "ap-northeast-2"
+profile      = "tf-user"
+use_lockfile = true
+encrypt      = true

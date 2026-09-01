@@ -1,0 +1,6 @@
+bucket       = "last-lab-prod-tf-state"
+key          = "last-lab/dev/ecr/terraform.tfstate"
+region       = "ap-northeast-2"
+profile      = "tf-user"
+use_lockfile = true
+encrypt      = true
