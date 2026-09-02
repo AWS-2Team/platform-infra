@@ -61,7 +61,7 @@ data "aws_ami" "amazon_linux_2023" {
 
   filter {
     name   = "name"
-    values = ["al2023-ami-*-x86_64"]
+    values = ["al2023-ami-2023.*-x86_64"]
   }
 
   filter {
@@ -124,7 +124,8 @@ resource "aws_instance" "bastion" {
     #!/bin/bash
     set -euxo pipefail
 
-    dnf install -y awscli jq mariadb105 postgresql15
+    dnf install -y amazon-ssm-agent awscli jq mariadb105 postgresql15
+    systemctl enable --now amazon-ssm-agent
     curl -fsSL -o /tmp/kubectl "https://dl.k8s.io/release/$(curl -fsSL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
     install -o root -g root -m 0755 /tmp/kubectl /usr/local/bin/kubectl
     rm -f /tmp/kubectl
