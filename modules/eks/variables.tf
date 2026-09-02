@@ -18,6 +18,12 @@ variable "node_subnet_ids" {
   type        = list(string)
 }
 
+variable "security_group_ids" {
+  description = "Additional security groups for the EKS control plane."
+  type        = list(string)
+  default     = []
+}
+
 variable "endpoint_public_access" {
   description = "Whether the EKS API endpoint is reachable from the internet."
   type        = bool

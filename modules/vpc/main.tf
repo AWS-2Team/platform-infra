@@ -13,6 +13,128 @@ resource "aws_internet_gateway" "main" {
   tags   = { Name = "${var.name}-igw" }
 }
 
+resource "aws_security_group" "eks" {
+  name        = "${var.name}-eks-sg"
+  description = "Security group for EKS resources"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.bastion.id]
+    description     = "Allow HTTP from bastion"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.name}-eks-sg"
+  }
+}
+
+resource "aws_security_group" "bastion" {
+  name        = "${var.name}-bastion-sg"
+  description = "Security group for SSM-managed bastion"
+  vpc_id      = aws_vpc.main.id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.name}-bastion-sg"
+  }
+}
+
+data "aws_ami" "amazon_linux_2023" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["al2023-ami-*-x86_64"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
+resource "aws_iam_role" "bastion" {
+  name_prefix = "${var.name}-bastion-"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "bastion_ssm" {
+  role       = aws_iam_role.bastion.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_role_policy" "bastion_eks" {
+  name = "${var.name}-bastion-eks"
+  role = aws_iam_role.bastion.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "eks:DescribeCluster",
+        "eks:ListClusters"
+      ]
+      Resource = "*"
+    }]
+  })
+}
+
+resource "aws_iam_instance_profile" "bastion" {
+  name_prefix = "${var.name}-bastion-"
+  role        = aws_iam_role.bastion.name
+}
+
+resource "aws_instance" "bastion" {
+  ami                         = data.aws_ami.amazon_linux_2023.id
+  instance_type               = "t3.micro"
+  subnet_id                   = aws_subnet.public[sort(keys(var.public_subnets))[0]].id
+  vpc_security_group_ids      = [aws_security_group.bastion.id]
+  associate_public_ip_address = true
+  iam_instance_profile        = aws_iam_instance_profile.bastion.name
+
+  user_data = <<-EOF
+    #!/bin/bash
+    set -euxo pipefail
+
+    dnf install -y awscli jq mariadb105 postgresql15
+    curl -fsSL -o /tmp/kubectl "https://dl.k8s.io/release/$(curl -fsSL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    install -o root -g root -m 0755 /tmp/kubectl /usr/local/bin/kubectl
+    rm -f /tmp/kubectl
+  EOF
+
+  tags = {
+    Name = "${var.name}-bastion"
+  }
+}
+
 resource "aws_subnet" "public" {
   for_each                = var.public_subnets
   vpc_id                  = aws_vpc.main.id
