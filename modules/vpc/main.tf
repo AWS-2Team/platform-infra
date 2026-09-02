@@ -19,11 +19,11 @@ resource "aws_security_group" "eks" {
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    from_port       = 80
-    to_port         = 80
+    from_port       = 443
+    to_port         = 443
     protocol        = "tcp"
     security_groups = [aws_security_group.bastion.id]
-    description     = "Allow HTTP from bastion"
+    description     = "Allow kubectl from bastion"
   }
 
   egress {
