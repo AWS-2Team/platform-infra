@@ -1,0 +1,14 @@
+region         = "ap-northeast-2"
+aws_profile    = "tf-user"
+aws_account_id = "123456789012"
+project        = "last-lab"
+env            = "dev"
+
+github_actions_roles = {
+  "petclinic-application" = {
+    subjects = ["repo:AWS-2Team/petclinic-application:*"]
+  }
+  "petclinic-web" = {
+    subjects = ["repo:AWS-2Team/petclinic-web:*"]
+  }
+}
