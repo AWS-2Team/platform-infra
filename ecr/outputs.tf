@@ -1,14 +1,14 @@
-output "repository_name" {
-  description = "ECR repository name."
-  value       = module.ecr.repository_name
+output "repository_names" {
+  description = "ECR repository names by image type."
+  value       = { for name, repo in module.ecr : name => repo.repository_name }
 }
 
-output "repository_url" {
-  description = "ECR repository URL."
-  value       = module.ecr.repository_url
+output "repository_urls" {
+  description = "ECR repository URLs by image type."
+  value       = { for name, repo in module.ecr : name => repo.repository_url }
 }
 
-output "repository_arn" {
-  description = "ECR repository ARN."
-  value       = module.ecr.repository_arn
+output "repository_arns" {
+  description = "ECR repository ARNs by image type."
+  value       = { for name, repo in module.ecr : name => repo.repository_arn }
 }

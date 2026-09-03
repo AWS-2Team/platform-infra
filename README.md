@@ -66,7 +66,7 @@ Windows PowerShell 환경은 [WINDOWS.md](./WINDOWS.md)를 참고합니다.
 
 `network`는 VPC, Subnet, NAT Gateway, Route Table 같은 네트워크 리소스를 생성합니다.
 
-`ecr`는 PetClinic 애플리케이션 이미지를 저장할 ECR Repository를 생성합니다.
+`ecr`는 PetClinic 웹/애플리케이션 이미지를 저장할 ECR Repository를 생성합니다.
 
 `eks`는 EKS Cluster와 Managed Node Group을 생성합니다. 네트워크 정보는 `network`의 remote state를 사용합니다.
 
@@ -122,7 +122,7 @@ terraform apply -var-file=./envs/dev/terraform.tfvars
 
 ```bash
 cd ../ecr
-terraform output repository_url
+terraform output repository_urls
 
 cd ../eks
 terraform output kubeconfig_command
