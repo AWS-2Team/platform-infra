@@ -48,7 +48,7 @@ terraform apply -var-file=.\envs\dev\terraform.tfvars
 
 ```powershell
 Set-Location ..\ecr
-terraform output repository_url
+terraform output repository_urls
 
 Set-Location ..\eks
 terraform output kubeconfig_command

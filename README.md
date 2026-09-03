@@ -24,7 +24,7 @@ platform-infra/
 ## 구성
 
 - `00-network`: VPC, Subnet, NAT Gateway, Route Table, bastion.
-- `01-ecr`: PetClinic 이미지를 저장할 ECR Repository.
+- `01-ecr`: PetClinic 웹/애플리케이션 이미지를 저장할 ECR Repository.
 - `02-iam`: GitHub Actions 가 키 없이 AWS 에 접근하는 OIDC 공급자와 CI 역할.
 - `03-eks`: EKS Cluster 와 Managed Node Group. 네트워크 정보는 `00-network` 의 remote state 를 사용합니다.
 
@@ -65,7 +65,7 @@ terraform apply tfplan
 
 ```bash
 cd 01-ecr
-terraform output repository_url
+terraform output repository_urls
 
 cd ../02-iam
 terraform output role_arns

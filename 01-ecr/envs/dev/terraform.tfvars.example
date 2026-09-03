@@ -2,7 +2,10 @@ aws_region   = "ap-northeast-2"
 aws_profile  = "tf-user"
 project_name = "petclinic-dev"
 
-ecr_repository_name      = "petclinic-dev-app"
+ecr_repository_names = {
+  web = "petclinic-dev-web"
+  app = "petclinic-dev-app"
+}
 ecr_image_tag_mutability = "MUTABLE"
 ecr_force_delete         = true
 

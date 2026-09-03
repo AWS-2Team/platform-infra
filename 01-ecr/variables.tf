@@ -22,10 +22,13 @@ variable "tags" {
   default     = {}
 }
 
-variable "ecr_repository_name" {
-  description = "ECR repository name."
-  type        = string
-  default     = "petclinic-dev-app"
+variable "ecr_repository_names" {
+  description = "ECR repository names by image type."
+  type        = map(string)
+  default = {
+    web = "petclinic-dev-web"
+    app = "petclinic-dev-app"
+  }
 }
 
 variable "ecr_image_tag_mutability" {
