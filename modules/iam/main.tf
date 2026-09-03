@@ -1,11 +1,21 @@
-resource "aws_iam_openid_connect_provider" "github" {
-  url             = "https://token.actions.githubusercontent.com"
-  client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = var.oidc_thumbprints
+locals {
+  oidc_host = replace(var.oidc_url, "https://", "")
 
-  tags = {
-    Name = "${var.name}-github-action-oidc"
-  }
+  role_inline_policies = merge([
+    for role_key, role in var.roles : {
+      for policy_name, policy_json in role.inline_policies : "${role_key}::${policy_name}" => {
+        role_key    = role_key
+        policy_name = policy_name
+        policy_json = policy_json
+      }
+    }
+  ]...)
+}
+
+resource "aws_iam_openid_connect_provider" "github" {
+  url             = var.oidc_url
+  client_id_list  = var.oidc_client_ids
+  thumbprint_list = var.oidc_thumbprints
 }
 
 resource "aws_iam_role" "this" {
@@ -20,31 +30,17 @@ resource "aws_iam_role" "this" {
       Principal = { Federated = aws_iam_openid_connect_provider.github.arn }
       Action    = "sts:AssumeRoleWithWebIdentity"
       Condition = {
-        StringEquals = { "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com" }
-        StringLike   = { "token.actions.githubusercontent.com:sub" = each.value.subjects }
+        StringEquals = { "${local.oidc_host}:aud" = var.oidc_client_ids[0] }
+        StringLike   = { "${local.oidc_host}:sub" = each.value.subjects }
       }
     }]
   })
-
-  tags = {
-    Name = "${var.name}-github-actions-${each.key}"
-  }
 }
 
-locals {
-  role_policy_attachments = merge([
-    for role_key, role in var.roles : {
-      for policy_arn in role.policy_arns : "${role_key}::${policy_arn}" => {
-        role_key   = role_key
-        policy_arn = policy_arn
-      }
-    }
-  ]...)
-}
+resource "aws_iam_role_policy" "this" {
+  for_each = local.role_inline_policies
 
-resource "aws_iam_role_policy_attachment" "this" {
-  for_each = local.role_policy_attachments
-
-  role       = aws_iam_role.this[each.value.role_key].name
-  policy_arn = each.value.policy_arn
+  name   = each.value.policy_name
+  role   = aws_iam_role.this[each.value.role_key].id
+  policy = each.value.policy_json
 }

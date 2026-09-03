@@ -37,7 +37,7 @@ cp envs/dev/backend.hcl.example       envs/dev/backend.hcl
 cp envs/dev/terraform.tfvars.example  envs/dev/terraform.tfvars
 ```
 
-`backend.hcl` 의 S3 bucket 은 모든 레이어에서 같은 dev state bucket 으로 맞춥니다. 자격증명은 로컬에서 `export AWS_PROFILE=<본인_프로필>` 로 줍니다.
+`backend.hcl` 의 S3 bucket 은 모든 레이어에서 같은 dev state bucket 으로 맞춥니다. 프로필은 `backend.hcl` 의 `profile` 과 `tfvars` 의 `aws_profile` 에 지정합니다. 둘 다 필수이고, 아래 배포 명령이 `-backend-config` 와 `-var-file` 로 그 값을 사용합니다.
 
 ## 배포 순서
 

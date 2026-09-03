@@ -1,13 +1,11 @@
-aws_region   = "ap-northeast-2"
-aws_profile  = "tf-user"
-project_name = "petclinic-dev"
+aws_region  = "ap-northeast-2"
+aws_profile = "tf-user"
+project     = "last-lab"
+env         = "dev"
 
-ecr_repository_names = {
-  web = "petclinic-dev-web"
-  app = "petclinic-dev-app"
-}
-ecr_image_tag_mutability = "MUTABLE"
-ecr_force_delete         = true
+ecr_repository_keys      = ["app", "web"]
+ecr_image_tag_mutability = "IMMUTABLE"
+ecr_force_delete         = false
 
 tags = {
   Environment = "dev"

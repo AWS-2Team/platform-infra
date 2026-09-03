@@ -10,7 +10,7 @@ provider "aws" {
 locals {
   tags = merge(
     {
-      Project   = var.project_name
+      Project   = var.project
       ManagedBy = "terraform"
     },
     var.tags

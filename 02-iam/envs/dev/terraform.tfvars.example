@@ -4,11 +4,21 @@ aws_account_id = "123456789012"
 project        = "last-lab"
 env            = "dev"
 
+oidc_url         = "https://token.actions.githubusercontent.com"
+oidc_client_ids  = ["sts.amazonaws.com"]
+oidc_thumbprints = ["ab9d0263244dd0326eb67015705a667e79cfe998"]
+
+ecr_state_bucket = "your-tfstate-bucket-name"
+ecr_state_key    = "last-lab/dev/ecr/terraform.tfstate"
+ecr_state_region = "ap-northeast-2"
+
 github_actions_roles = {
   "petclinic-application" = {
-    subjects = ["repo:AWS-2Team/petclinic-application:*"]
+    subjects            = ["repo:AWS-2Team/petclinic-application:*"]
+    ecr_repository_keys = ["app"]
   }
   "petclinic-web" = {
-    subjects = ["repo:AWS-2Team/petclinic-web:*"]
+    subjects            = ["repo:AWS-2Team/petclinic-web:*"]
+    ecr_repository_keys = ["web"]
   }
 }

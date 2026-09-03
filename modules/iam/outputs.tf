@@ -7,8 +7,3 @@ output "role_arns" {
   description = "역할 key 별 ARN."
   value       = { for k, r in aws_iam_role.this : k => r.arn }
 }
-
-output "role_names" {
-  description = "역할 key 별 이름."
-  value       = { for k, r in aws_iam_role.this : k => r.name }
-}

@@ -5,15 +5,18 @@ variable "aws_region" {
 }
 
 variable "aws_profile" {
-  description = "AWS CLI profile name. Null uses the default provider credential chain."
+  description = "AWS CLI profile name"
   type        = string
-  default     = null
 }
 
-variable "project_name" {
-  description = "Name prefix for ECR resources."
+variable "project" {
+  description = "프로젝트 식별자"
   type        = string
-  default     = "petclinic-dev"
+}
+
+variable "env" {
+  description = "환경 이름"
+  type        = string
 }
 
 variable "tags" {
@@ -22,23 +25,19 @@ variable "tags" {
   default     = {}
 }
 
-variable "ecr_repository_names" {
-  description = "ECR repository names by image type."
-  type        = map(string)
-  default = {
-    web = "petclinic-dev-web"
-    app = "petclinic-dev-app"
-  }
+variable "ecr_repository_keys" {
+  description = "ECR repo 키. 이름은 <project>-<env>-<key>"
+  type        = set(string)
 }
 
 variable "ecr_image_tag_mutability" {
-  description = "ECR tag mutability. Use IMMUTABLE for stricter production releases."
+  description = "ECR tag mutability."
   type        = string
-  default     = "MUTABLE"
+  default     = "IMMUTABLE"
 }
 
 variable "ecr_force_delete" {
   description = "Delete the ECR repository even when images exist."
   type        = bool
-  default     = true
+  default     = false
 }
