@@ -171,6 +171,33 @@ resource "aws_subnet" "private" {
   }
 }
 
+resource "aws_network_acl" "main" {
+  vpc_id     = aws_vpc.main.id
+  subnet_ids = concat([for s in aws_subnet.public : s.id], [for s in aws_subnet.private : s.id])
+
+  ingress {
+    protocol   = "-1"
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 0
+  }
+
+  egress {
+    protocol   = "tcp"
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 32768
+    to_port    = 65535
+  }
+
+  tags = {
+    Name = "${var.name}-nacl"
+  }
+}
+
 # NAT 각 AZ 1개.
 resource "aws_eip" "nat" {
   for_each = var.public_subnets
