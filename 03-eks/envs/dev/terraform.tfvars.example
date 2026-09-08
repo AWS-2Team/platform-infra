@@ -7,7 +7,7 @@ network_state_key    = "last-lab/dev/network/terraform.tfstate"
 network_state_region = "ap-northeast-2"
 
 cluster_version             = "1.36"
-eks_endpoint_public_access  = true
+eks_endpoint_public_access  = false
 eks_endpoint_private_access = true
 eks_authentication_mode     = "API_AND_CONFIG_MAP"
 eks_node_instance_types     = ["t3.medium"]

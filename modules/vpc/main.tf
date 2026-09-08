@@ -26,7 +26,7 @@ resource "aws_security_group" "eks" {
     description     = "Allow kubectl from bastion"
   }
 
-    ingress {
+  ingress {
     from_port       = 443
     to_port         = 443
     protocol        = "tcp"
