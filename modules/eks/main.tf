@@ -114,6 +114,16 @@ resource "aws_eks_node_group" "main" {
   }
 }
 
+resource "aws_autoscaling_group_tag" "node_name" {
+  autoscaling_group_name = aws_eks_node_group.main.resources[0].autoscaling_groups[0].name
+
+  tag {
+    key                 = "Name"
+    value               = "${var.name}-node"
+    propagate_at_launch = true
+  }
+}
+
 resource "aws_eks_addon" "vpc_cni" {
   cluster_name                = aws_eks_cluster.main.name
   addon_name                  = "vpc-cni"

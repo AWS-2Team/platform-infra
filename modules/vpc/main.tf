@@ -124,6 +124,7 @@ resource "aws_instance" "bastion" {
   ami                         = data.aws_ami.amazon_linux_2023.id
   instance_type               = "t3.micro"
   subnet_id                   = aws_subnet.public[sort(keys(var.public_subnets))[0]].id
+  private_ip                  = var.bastion_private_ip
   vpc_security_group_ids      = [aws_security_group.bastion.id]
   associate_public_ip_address = true
   iam_instance_profile        = aws_iam_instance_profile.bastion.name
@@ -171,11 +172,57 @@ resource "aws_subnet" "private" {
   }
 }
 
+resource "aws_subnet" "db" {
+  for_each          = var.db_subnets
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = each.value
+  availability_zone = "${var.region}${each.key}"
+
+  tags = {
+    Name = "${var.name}-db-${each.key}"
+    Tier = "db"
+  }
+}
+
+locals {
+  public_subnet_cidrs = [for k in sort(keys(var.public_subnets)) : var.public_subnets[k]]
+  eks_subnet_cidrs    = [for k in sort(keys(var.private_subnets)) : var.private_subnets[k]]
+  db_subnet_cidrs     = [for k in sort(keys(var.db_subnets)) : var.db_subnets[k]]
+  bastion_cidr        = "${var.bastion_private_ip}/32"
+}
+
 resource "aws_network_acl" "main" {
   vpc_id     = aws_vpc.main.id
-  subnet_ids = concat([for s in aws_subnet.public : s.id], [for s in aws_subnet.private : s.id])
+  subnet_ids = [for s in aws_subnet.public : s.id]
 
   ingress {
+    protocol   = "tcp"
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 80
+    to_port    = 80
+  }
+
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 110
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 443
+    to_port    = 443
+  }
+
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 120
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 1024
+    to_port    = 65535
+  }
+
+  egress {
     protocol   = "-1"
     rule_no    = 100
     action     = "allow"
@@ -184,17 +231,171 @@ resource "aws_network_acl" "main" {
     to_port    = 0
   }
 
+  tags = {
+    Name = "${var.name}-public-nacl"
+  }
+}
+
+resource "aws_network_acl" "private" {
+  vpc_id     = aws_vpc.main.id
+  subnet_ids = [for s in aws_subnet.private : s.id]
+
+  dynamic "ingress" {
+    for_each = { for i, cidr in local.public_subnet_cidrs : i => cidr }
+
+    content {
+      protocol   = "tcp"
+      rule_no    = 100 + tonumber(ingress.key)
+      action     = "allow"
+      cidr_block = ingress.value
+      from_port  = 80
+      to_port    = 80
+    }
+  }
+
+  dynamic "ingress" {
+    for_each = { for i, cidr in local.public_subnet_cidrs : i => cidr }
+
+    content {
+      protocol   = "tcp"
+      rule_no    = 200 + tonumber(ingress.key)
+      action     = "allow"
+      cidr_block = ingress.value
+      from_port  = 8080
+      to_port    = 8080
+    }
+  }
+
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 300
+    action     = "allow"
+    cidr_block = local.bastion_cidr
+    from_port  = 80
+    to_port    = 80
+  }
+
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 310
+    action     = "allow"
+    cidr_block = local.bastion_cidr
+    from_port  = 8080
+    to_port    = 8080
+  }
+
+  dynamic "ingress" {
+    for_each = { for i, cidr in local.db_subnet_cidrs : i => cidr }
+
+    content {
+      protocol   = "tcp"
+      rule_no    = 400 + tonumber(ingress.key)
+      action     = "allow"
+      cidr_block = ingress.value
+      from_port  = 1024
+      to_port    = 65535
+    }
+  }
+
+  dynamic "egress" {
+    for_each = { for i, cidr in local.db_subnet_cidrs : i => cidr }
+
+    content {
+      protocol   = "tcp"
+      rule_no    = 100 + tonumber(egress.key)
+      action     = "allow"
+      cidr_block = egress.value
+      from_port  = 3306
+      to_port    = 3306
+    }
+  }
+
   egress {
     protocol   = "tcp"
-    rule_no    = 100
+    rule_no    = 200
     action     = "allow"
     cidr_block = "0.0.0.0/0"
-    from_port  = 32768
+    from_port  = 443
+    to_port    = 443
+  }
+
+  dynamic "egress" {
+    for_each = { for i, cidr in local.public_subnet_cidrs : i => cidr }
+
+    content {
+      protocol   = "tcp"
+      rule_no    = 300 + tonumber(egress.key)
+      action     = "allow"
+      cidr_block = egress.value
+      from_port  = 1024
+      to_port    = 65535
+    }
+  }
+
+  egress {
+    protocol   = "tcp"
+    rule_no    = 400
+    action     = "allow"
+    cidr_block = local.bastion_cidr
+    from_port  = 1024
     to_port    = 65535
   }
 
   tags = {
-    Name = "${var.name}-nacl"
+    Name = "${var.name}-eks-nacl"
+  }
+}
+
+resource "aws_network_acl" "db" {
+  vpc_id     = aws_vpc.main.id
+  subnet_ids = [for s in aws_subnet.db : s.id]
+
+  dynamic "ingress" {
+    for_each = { for i, cidr in local.eks_subnet_cidrs : i => cidr }
+
+    content {
+      protocol   = "tcp"
+      rule_no    = 100 + tonumber(ingress.key)
+      action     = "allow"
+      cidr_block = ingress.value
+      from_port  = 3306
+      to_port    = 3306
+    }
+  }
+
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 200
+    action     = "allow"
+    cidr_block = local.bastion_cidr
+    from_port  = 3306
+    to_port    = 3306
+  }
+
+  dynamic "egress" {
+    for_each = { for i, cidr in local.eks_subnet_cidrs : i => cidr }
+
+    content {
+      protocol   = "tcp"
+      rule_no    = 100 + tonumber(egress.key)
+      action     = "allow"
+      cidr_block = egress.value
+      from_port  = 1024
+      to_port    = 65535
+    }
+  }
+
+  egress {
+    protocol   = "tcp"
+    rule_no    = 200
+    action     = "allow"
+    cidr_block = local.bastion_cidr
+    from_port  = 1024
+    to_port    = 65535
+  }
+
+  tags = {
+    Name = "${var.name}-db-nacl"
   }
 }
 
@@ -234,6 +435,11 @@ resource "aws_route_table" "private" {
   tags = { Name = "${var.name}-private-${each.key}-rt" }
 }
 
+resource "aws_route_table" "db" {
+  vpc_id = aws_vpc.main.id
+  tags   = { Name = "${var.name}-db-rt" }
+}
+
 resource "aws_route_table_association" "public" {
   for_each       = aws_subnet.public
   subnet_id      = each.value.id
@@ -244,4 +450,10 @@ resource "aws_route_table_association" "private" {
   for_each       = aws_subnet.private
   subnet_id      = each.value.id
   route_table_id = aws_route_table.private[each.key].id
+}
+
+resource "aws_route_table_association" "db" {
+  for_each       = aws_subnet.db
+  subnet_id      = each.value.id
+  route_table_id = aws_route_table.db.id
 }
