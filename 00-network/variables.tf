@@ -36,3 +36,13 @@ variable "private_subnets" {
   type        = map(string)
   description = "private subnet. key = AZ suffix, value = subnet CIDR"
 }
+
+variable "db_subnets" {
+  type        = map(string)
+  description = "DB subnet. key = AZ suffix, value = subnet CIDR"
+}
+
+variable "bastion_private_ip" {
+  type        = string
+  description = "NACL에서 bastion만 허용하기 위한 고정 private IP"
+}

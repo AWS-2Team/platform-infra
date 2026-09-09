@@ -14,6 +14,10 @@ output "private_subnet_ids" {
   value = module.vpc.private_subnet_ids
 }
 
+output "db_subnet_ids" {
+  value = module.vpc.db_subnet_ids
+}
+
 output "eks_security_group_id" {
   value = module.vpc.eks_security_group_id
 }
