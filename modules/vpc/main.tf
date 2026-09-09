@@ -297,6 +297,19 @@ resource "aws_network_acl" "private" {
     }
   }
 
+  dynamic "ingress" {
+    for_each = { for i, cidr in local.eks_subnet_cidrs : i => cidr }
+
+    content {
+      protocol   = "tcp"
+      rule_no    = 500 + tonumber(ingress.key)
+      action     = "allow"
+      cidr_block = ingress.value
+      from_port  = 1024
+      to_port    = 65535
+    }
+  }
+
   dynamic "egress" {
     for_each = { for i, cidr in local.db_subnet_cidrs : i => cidr }
 
@@ -325,6 +338,19 @@ resource "aws_network_acl" "private" {
     content {
       protocol   = "tcp"
       rule_no    = 300 + tonumber(egress.key)
+      action     = "allow"
+      cidr_block = egress.value
+      from_port  = 1024
+      to_port    = 65535
+    }
+  }
+
+  dynamic "egress" {
+    for_each = { for i, cidr in local.eks_subnet_cidrs : i => cidr }
+
+    content {
+      protocol   = "tcp"
+      rule_no    = 500 + tonumber(egress.key)
       action     = "allow"
       cidr_block = egress.value
       from_port  = 1024
