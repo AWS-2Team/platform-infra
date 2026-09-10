@@ -107,6 +107,7 @@ resource "aws_eks_node_group" "main" {
 
   lifecycle {
     create_before_destroy = true
+    ignore_changes        = [scaling_config[0].desired_size]
   }
 
   tags = {
@@ -121,6 +122,26 @@ resource "aws_autoscaling_group_tag" "node_name" {
     key                 = "Name"
     value               = "${var.name}-node"
     propagate_at_launch = true
+  }
+}
+
+resource "aws_autoscaling_group_tag" "cluster_autoscaler_enabled" {
+  autoscaling_group_name = aws_eks_node_group.main.resources[0].autoscaling_groups[0].name
+
+  tag {
+    key                 = "k8s.io/cluster-autoscaler/enabled"
+    value               = "true"
+    propagate_at_launch = false
+  }
+}
+
+resource "aws_autoscaling_group_tag" "cluster_autoscaler_cluster" {
+  autoscaling_group_name = aws_eks_node_group.main.resources[0].autoscaling_groups[0].name
+
+  tag {
+    key                 = "k8s.io/cluster-autoscaler/${aws_eks_cluster.main.name}"
+    value               = "owned"
+    propagate_at_launch = false
   }
 }
 

@@ -63,21 +63,6 @@ resource "aws_security_group" "bastion" {
   }
 }
 
-data "aws_ami" "amazon_linux_2023" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["al2023-ami-2023.*-x86_64"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-}
-
 resource "aws_iam_role" "bastion" {
   name_prefix = "${var.name}-bastion-"
 
@@ -121,7 +106,7 @@ resource "aws_iam_instance_profile" "bastion" {
 }
 
 resource "aws_instance" "bastion" {
-  ami                         = data.aws_ami.amazon_linux_2023.id
+  ami                         = var.bastion_ami_id
   instance_type               = "t3.micro"
   subnet_id                   = aws_subnet.public[sort(keys(var.public_subnets))[0]].id
   private_ip                  = var.bastion_private_ip
@@ -284,6 +269,33 @@ resource "aws_network_acl" "private" {
     to_port    = 8080
   }
 
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 570
+    action     = "allow"
+    cidr_block = var.cidr
+    from_port  = 443
+    to_port    = 443
+  }
+
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 580
+    action     = "allow"
+    cidr_block = local.bastion_cidr
+    from_port  = 22
+    to_port    = 22
+  }
+
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 590
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 1024
+    to_port    = 65535
+  }
+
   dynamic "ingress" {
     for_each = { for i, cidr in local.db_subnet_cidrs : i => cidr }
 
@@ -310,6 +322,28 @@ resource "aws_network_acl" "private" {
     }
   }
 
+  dynamic "ingress" {
+    for_each = { for i, cidr in local.eks_subnet_cidrs : i => cidr }
+
+    content {
+      protocol   = "tcp"
+      rule_no    = 600 + tonumber(ingress.key)
+      action     = "allow"
+      cidr_block = ingress.value
+      from_port  = 443
+      to_port    = 443
+    }
+  }
+
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 700
+    action     = "allow"
+    cidr_block = var.cidr
+    from_port  = 10250
+    to_port    = 10250
+  }
+
   dynamic "egress" {
     for_each = { for i, cidr in local.db_subnet_cidrs : i => cidr }
 
@@ -330,6 +364,15 @@ resource "aws_network_acl" "private" {
     cidr_block = "0.0.0.0/0"
     from_port  = 443
     to_port    = 443
+  }
+
+  egress {
+    protocol   = "tcp"
+    rule_no    = 250
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 80
+    to_port    = 80
   }
 
   dynamic "egress" {
@@ -356,6 +399,15 @@ resource "aws_network_acl" "private" {
       from_port  = 1024
       to_port    = 65535
     }
+  }
+
+  egress {
+    protocol   = "tcp"
+    rule_no    = 700
+    action     = "allow"
+    cidr_block = var.cidr
+    from_port  = 1024
+    to_port    = 65535
   }
 
   egress {

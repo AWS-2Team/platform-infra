@@ -32,3 +32,9 @@ variable "bastion_private_ip" {
   type        = string
   description = "NACL에서 bastion만 허용하기 위한 고정 private IP"
 }
+
+variable "bastion_ami_id" {
+  type        = string
+  description = "Bastion EC2 AMI ID"
+  default     = "ami-00b5b2470beafd65f"
+}

@@ -12,4 +12,5 @@ module "vpc" {
   private_subnets    = var.private_subnets
   db_subnets         = var.db_subnets
   bastion_private_ip = var.bastion_private_ip
+  bastion_ami_id     = var.bastion_ami_id
 }

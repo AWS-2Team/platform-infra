@@ -34,6 +34,11 @@ output "aws_load_balancer_controller_role_arn" {
   value       = aws_iam_role.aws_load_balancer_controller.arn
 }
 
+output "cluster_autoscaler_role_arn" {
+  description = "IAM role ARN for the Cluster Autoscaler service account."
+  value       = aws_iam_role.cluster_autoscaler.arn
+}
+
 output "node_group_name" {
   description = "EKS managed node group name."
   value       = module.eks.node_group_name

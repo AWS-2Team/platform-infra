@@ -22,3 +22,4 @@ db_subnets = {
 }
 
 bastion_private_ip = "10.0.0.10"
+bastion_ami_id     = "ami-00b5b2470beafd65f"
