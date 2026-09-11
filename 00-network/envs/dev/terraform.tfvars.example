@@ -21,5 +21,7 @@ db_subnets = {
   c = "10.0.80.0/20"
 }
 
+karpenter_discovery = "petclinic-dev"
+
 bastion_private_ip = "10.0.0.10"
 bastion_ami_id     = "ami-00b5b2470beafd65f"

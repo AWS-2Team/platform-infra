@@ -153,6 +153,7 @@ resource "aws_subnet" "private" {
   tags = {
     Name                              = "${var.name}-private-${each.key}"
     Tier                              = "private"
+    "karpenter.sh/discovery"          = var.karpenter_discovery
     "kubernetes.io/role/internal-elb" = "1"
   }
 }
