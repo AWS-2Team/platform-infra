@@ -345,6 +345,24 @@ resource "aws_network_acl" "private" {
     to_port    = 10250
   }
 
+  ingress {
+    protocol   = "udp"
+    rule_no    = 800
+    action     = "allow"
+    cidr_block = var.cidr
+    from_port  = 53
+    to_port    = 53
+  }
+
+  ingress {
+    protocol   = "udp"
+    rule_no    = 810
+    action     = "allow"
+    cidr_block = var.cidr
+    from_port  = 1024
+    to_port    = 65535
+  }
+
   dynamic "egress" {
     for_each = { for i, cidr in local.db_subnet_cidrs : i => cidr }
 
@@ -416,6 +434,24 @@ resource "aws_network_acl" "private" {
     rule_no    = 400
     action     = "allow"
     cidr_block = local.bastion_cidr
+    from_port  = 1024
+    to_port    = 65535
+  }
+
+  egress {
+    protocol   = "udp"
+    rule_no    = 800
+    action     = "allow"
+    cidr_block = var.cidr
+    from_port  = 53
+    to_port    = 53
+  }
+
+  egress {
+    protocol   = "udp"
+    rule_no    = 810
+    action     = "allow"
+    cidr_block = var.cidr
     from_port  = 1024
     to_port    = 65535
   }

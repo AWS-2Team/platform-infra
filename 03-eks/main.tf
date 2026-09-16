@@ -10,6 +10,7 @@ module "eks" {
   endpoint_private_access = var.eks_endpoint_private_access
   authentication_mode     = var.eks_authentication_mode
   node_instance_types     = var.eks_node_instance_types
+  node_ami_type           = var.eks_node_ami_type
   node_capacity_type      = var.eks_node_capacity_type
   node_disk_size          = var.eks_node_disk_size
   node_min_size           = var.eks_node_min_size

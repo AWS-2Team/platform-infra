@@ -67,6 +67,12 @@ variable "eks_node_instance_types" {
   default     = ["t3.medium"]
 }
 
+variable "eks_node_ami_type" {
+  description = "AMI type for the EKS managed node group."
+  type        = string
+  default     = null
+}
+
 variable "eks_node_capacity_type" {
   description = "EKS node capacity type: ON_DEMAND or SPOT."
   type        = string

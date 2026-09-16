@@ -44,6 +44,12 @@ variable "node_instance_types" {
   type        = list(string)
 }
 
+variable "node_ami_type" {
+  description = "AMI type for the EKS managed node group."
+  type        = string
+  default     = null
+}
+
 variable "node_capacity_type" {
   description = "EKS node capacity type: ON_DEMAND or SPOT."
   type        = string
