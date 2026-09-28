@@ -126,26 +126,6 @@ resource "aws_autoscaling_group_tag" "node_name" {
   }
 }
 
-resource "aws_autoscaling_group_tag" "cluster_autoscaler_enabled" {
-  autoscaling_group_name = aws_eks_node_group.main.resources[0].autoscaling_groups[0].name
-
-  tag {
-    key                 = "k8s.io/cluster-autoscaler/enabled"
-    value               = "true"
-    propagate_at_launch = false
-  }
-}
-
-resource "aws_autoscaling_group_tag" "cluster_autoscaler_cluster" {
-  autoscaling_group_name = aws_eks_node_group.main.resources[0].autoscaling_groups[0].name
-
-  tag {
-    key                 = "k8s.io/cluster-autoscaler/${aws_eks_cluster.main.name}"
-    value               = "owned"
-    propagate_at_launch = false
-  }
-}
-
 resource "aws_eks_addon" "vpc_cni" {
   cluster_name                = aws_eks_cluster.main.name
   addon_name                  = "vpc-cni"
